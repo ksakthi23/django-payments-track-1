@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  pypi:
+    if: github.repository == 'jazzband/django-payments'
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          python -m pip install -U setuptools twine wheel build setuptools_scm
+
+      - name: Build package
+        run: |
+          python -m setuptools_scm
+          python -m build --sdist --wheel --no-isolation
+          twine check dist/*
+
+      - name: Upload packages to Jazzband
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: jazzband
+          password: ${{ secrets.JAZZBAND_RELEASE_KEY }}
+          repository_url: https://jazzband.co/projects/django-payments/upload

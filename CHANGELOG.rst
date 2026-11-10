@@ -1,0 +1,150 @@
+Changelog
+=========
+
+This file contains a brief summary of new features and dependency changes or
+releases, in reverse chronological order.
+
+Unreleased
+----------
+
+- ``process_data`` locks the payment row (``select_for_update()``), so a
+  webhook and a browser callback for the same payment no longer overwrite
+  each other's state.
+
+v4.1.0
+------
+
+- Add support for Django 6.1.
+
+v4.0.0
+------
+
+- **Breaking**: Webhook error responses in ``static_callback`` endpoint now
+  return JSON instead of raising ``Http404``. Error responses include
+  ``variant`` and ``error_code`` fields for easier debugging. This helps
+  developers identify which payment provider is having issues when viewing
+  webhook logs in provider dashboards (Stripe, PayPal, etc.).
+
+  **Migration guide:**
+    - If you're using webhook systems (Stripe, PayPal, etc.), no changes needed
+      - they expect JSON.
+    - If you have custom code checking for ``Http404`` exceptions from webhook
+      endpoints, update to handle JSON responses with appropriate HTTP status
+      codes (400, 404, etc.).
+    - Payment tokens are no longer exposed in 404 error responses for security.
+
+- **Breaking**: ``StripeProvider``, which was deprecated in v3.0.0, has been
+  dropped. Use ``StripeProviderV3`` instead.
+- **Breaking**: Drop support for Django 4.2, 5.0, and 5.1.
+  Supported versions of Django are 5.2 (LTS), and 6.0.
+- **Breaking**: Drop support for Python 3.9.
+  Supported versions of Python are 3.10 thru 3.14.
+- Fixed ``StripeProviderV3`` not setting ``captured_amount`` on payment
+  confirmation in ``process_data()`` and ``status()``, which broke refunds.
+- The stripe provider now requires ``stripe>=7.8.0``, released Dec 2023.
+
+v3.1.0
+------
+
+- Add support for Django 5.2.
+- Add support for Python 3.13.
+
+v3.0.1
+------
+
+This version is functionally identically to v3.0.0, and only includes a fix in
+our pipeline that prevented the previous version from being published to PyPI.
+
+v3.0.0
+------
+- **BREAKING**: Dropped support for Django 2.2, 3.0, 3.1 and 4.0.
+  Supported versions of Django are 3.2 (LTS), 4.1 and 4.2.
+- Stripe backends now sends order_id in the metadata parameter.
+- A new ``StripeProviderV3`` has been added using the latest Stripe API.
+- Added support for Python 3.11, Django 4.1 and Django 4.2.
+- Stripe backends now supports webhooks
+- New :ref:`webhook settings <webhooks>`
+- Fixed PayPal backends not saving captured_amount when processing data.
+- Fixed ``base_payment.refund()`` not making any refund
+- PayPal backends now perform a full refund if ``amount=None``.
+- Added support for Django 5.0.
+- Added support for Django 5.1.
+
+v2.0.0
+------
+
+- **Breaking**: The `todopago` backend has been dropped. The payment provider
+  has [quite suddenly] announced it's shutting down.
+- Older versions of ``django-phonenumber-field`` are now also supported. There
+  was no intrinsic incompatibility; the pinned version was merely too
+  restrictive.
+- Various documentation improvements.
+
+v1.0.0
+------
+
+So far we've been bumping the minor version each time we introduced breaking
+changes. This can result in downstream breakage for tools and setups that
+expect semantic versioning.
+
+From now on we'll be using semantic versioning and bump the major version
+whenever we introduce any breaking changes. Increasing the major number does
+not imply that it's a huge release with a lots of changes; it implies that
+there is at least one backwards-incompatible change, or a change that requires
+intervention.
+
+In this case we've introduced a new field to the abstract Payment class, so
+applications will need to create a new migration to apply it (django's
+`makemigrations` should handle this perfectly).
+
+- ``billing_phone`` field added to :class:`~.BasePayment`. A migration will be needed
+  since, BasePayment is abstract.
+- Added TodoPago provider.
+- Dropped support for Python 3.6.
+- The provider factory is now configurable. See ``PAYMENT_VARIANT_FACTORY`` in
+  the :ref:`settings docs <settings>` for details.
+- Fix a PayPal error.
+
+v0.15.1
+-------
+
+- Added support for Python 3.10.
+- Added support for Django 4.0.
+- Fixed bad usage of return URLs for Sofort provider.
+- Fixed handling of very long descriptions with Sofort.
+
+
+v0.15.0
+-------
+
+- Support for "Google Wallet" has been dropped. It seems to be dead upstream,
+  and all existing links to the documentation and to the JS scripts are broken.
+- Added support for Django 3.2.
+- Dependencies that are only required for a specific provider have been moved
+  to extra (optional) dependencies. See the installation instructions for
+  further details.
+- Added support for MercadoPago.
+- ``suds-jurko`` has been replaced with `suds-community`, since the former
+  no longer installs with recent ``setuptools``.
+
+**Errata**
+
+This version changed how the ``status_changed`` works. It now only updates the
+affected columns. Code that relied on the implicit save within this function
+will likely break. See #309 for discussion on this.
+
+v0.14.0
+-------
+
+- Dropped support for all Pythons < 3.6.
+- Added support for Python 3.8 and 3.9.
+- Added support for Django 3.1
+- Improved documentation and started adding some typing hints.
+- Added PayU provider.
+- Pinned some dependencies to avoid potentially broken scenarios.
+- Various code cleanups and minor issues fixed.
+
+The project has also moved to Jazzband between the 0.13.0 and 0.14.0 releases.
+The new project location is https://github.com/jazzband/django-payments.
+
+PyPI packages and rtd locations remain the same.

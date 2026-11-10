@@ -1,0 +1,144 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from decimal import Decimal
+from unittest.mock import MagicMock
+from unittest.mock import patch
+
+import pytest
+from django.http import HttpResponse
+from django.http import HttpResponseForbidden
+
+from payments import PaymentStatus
+from payments import PurchasedItem
+
+from . import CoinbaseProvider
+
+PAYMENT_TOKEN = "5a4dae68-2715-4b1e-8bb2-2c2dbe9255f6"
+KEY = "abc123"
+SECRET = "123abc"
+VARIANT = "coinbase"
+
+COINBASE_REQUEST = {
+    "order": {
+        "transaction": {"id": "123456"},
+        "custom": hashlib.md5((f"coinbase-{PAYMENT_TOKEN}-{KEY}").encode()).hexdigest(),
+    }
+}
+
+
+class Payment:
+    id = 1
+    description = "payment"
+    currency = "BTC"
+    total = Decimal(100)
+    status = PaymentStatus.WAITING
+    token = PAYMENT_TOKEN
+    variant = VARIANT
+
+    def change_status(self, status: str) -> None:
+        self.status = status
+
+    def get_failure_url(self) -> str:
+        return "http://cancel.com"
+
+    def get_process_url(self) -> str:
+        return "http://example.com"
+
+    def get_purchased_items(self) -> list[PurchasedItem]:
+        return []
+
+    def save(self) -> Payment:
+        return self
+
+    def get_success_url(self) -> str:
+        return "http://success.com"
+
+
+@pytest.fixture
+def provider() -> tuple[Payment, CoinbaseProvider]:
+    payment = Payment()
+    return payment, CoinbaseProvider(key=KEY, secret=SECRET)
+
+
+def test_process_data(provider: tuple[Payment, CoinbaseProvider]) -> None:
+    payment, prov = provider
+    request = MagicMock()
+    request.body = json.dumps(COINBASE_REQUEST)
+    response = prov.process_data(payment, request)
+    assert isinstance(response, HttpResponse)
+    assert payment.status == PaymentStatus.CONFIRMED
+
+
+def test_incorrect_custom_token_process_data(
+    provider: tuple[Payment, CoinbaseProvider],
+) -> None:
+    payment, prov = provider
+    data = dict(COINBASE_REQUEST)
+    data.update({"order": {"custom": "fake"}})
+    request = MagicMock()
+    request.body = json.dumps(data)
+    response = prov.process_data(payment, request)
+    assert isinstance(response, HttpResponseForbidden)
+
+
+def test_incorrect_data_process_data(
+    provider: tuple[Payment, CoinbaseProvider],
+) -> None:
+    payment, prov = provider
+    request = MagicMock()
+    request.POST = {"id": "1234"}
+    response = prov.process_data(payment, request)
+    assert isinstance(response, HttpResponseForbidden)
+
+
+@patch("time.time")
+@patch("requests.post")
+def test_provider_returns_checkout_url(
+    mocked_post: MagicMock,
+    mocked_time: MagicMock,
+    provider: tuple[Payment, CoinbaseProvider],
+) -> None:
+    payment, prov = provider
+    code = "123abc"
+    signature = "21d476eff7b2e6cccdfe6deb0c097ba638d5de7e775b303e4fdb2f8bfeff72e2"
+    url = f"https://sandbox.coinbase.com/checkouts/{code}"
+    post = MagicMock()
+    post.json = MagicMock(return_value={"button": {"code": code}})
+    post.status_code = 200
+    mocked_post.return_value = post
+    mocked_time.return_value = 1
+
+    form = prov.get_form(payment)
+    assert form.action == url
+    assert mocked_post.call_args[1]["headers"]["ACCESS_SIGNATURE"] == signature
+
+
+def test_provider_rejects_pre_authorization() -> None:
+    from django.core.exceptions import ImproperlyConfigured
+
+    with pytest.raises(
+        ImproperlyConfigured,
+        match="Coinbase does not support pre-authorization",
+    ):
+        CoinbaseProvider(key=KEY, secret=SECRET, capture=False)
+
+
+def test_process_data_does_not_change_non_waiting_payment(
+    provider: tuple[Payment, CoinbaseProvider],
+) -> None:
+    payment, prov = provider
+    payment.status = PaymentStatus.CONFIRMED
+    payment.transaction_id = "existing-transaction"
+    payment.save = MagicMock()
+
+    request = MagicMock()
+    request.body = json.dumps(COINBASE_REQUEST)
+
+    response = prov.process_data(payment, request)
+
+    assert response.content == b"OK"
+    assert payment.status == PaymentStatus.CONFIRMED
+    assert payment.transaction_id == "existing-transaction"
+    payment.save.assert_not_called()

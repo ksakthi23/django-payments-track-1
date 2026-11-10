@@ -1,0 +1,23 @@
+version: 2
+# Ref: https://docs.readthedocs.com/platform/stable/config-file/v2.html
+
+sphinx:
+  configuration: docs/conf.py
+
+build:
+  os: "ubuntu-26.04"
+  tools:
+    python: "3.12"
+
+python:
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
+        - braintree
+        - cybersource
+        - mercadopago
+        - sagepay
+        - sofort
+        - stripe

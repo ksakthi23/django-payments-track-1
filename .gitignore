@@ -1,0 +1,16 @@
+!.coveragerc
+!.gitignore
+*.swp
+*.py[co]
+*~
+*\.egg*
+dist
+docs/_build
+payments/version.py
+.coverage
+coverage.xml
+build
+
+# UnvibeCode generated reports and macOS metadata
+unvibecode_results/
+.DS_Store

@@ -1,0 +1,134 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
+
+[project]
+name = "django-payments"
+authors = [{ name = "Mirumee Software", email = "hello@mirumee.com" }]
+description = "Universal payment handling for Django"
+readme = "README.rst"
+requires-python = ">=3.10"
+keywords = ["payments"]
+license = { text = "BSD" }
+classifiers = [
+  "Environment :: Web Environment",
+  "Framework :: Django :: 4.2",
+  "Framework :: Django :: 5.1",
+  "Framework :: Django :: 5.2",
+  "Framework :: Django :: 6.0",
+  "Framework :: Django :: 6.1",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Framework :: Django",
+  "Topic :: Software Development :: Libraries :: Application Frameworks",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "django>=5.2,<7.0",
+  "requests>=1.2.0",
+  "django-phonenumber-field[phonenumberslite]>=5.0.0",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+braintree = ["braintree>=3.14.0"]
+cybersource = ["suds-community>=0.6"]
+dev = [
+  "coverage",
+  "django-stubs[compatible-mypy]",
+  "mock",
+  "pytest",
+  "pytest-cov",
+  "pytest-django",
+  "types-braintree",
+  "types-dj-database-url",
+  "types-requests",
+  "types-stripe",
+  "types-xmltodict",
+]
+docs = ["sphinx_rtd_theme"]
+mercadopago = ["mercadopago>=2.0.0,<3.0.0"]
+sagepay = ["cryptography>=1.1.0"]
+sofort = ["xmltodict>=0.9.2"]
+stripe = ["stripe>=7.8.0"]
+
+[project.urls]
+homepage = "https://github.com/jazzband/django-payments"
+documentation = "https://django-payments.readthedocs.io/"
+changelog = "https://django-payments.readthedocs.io/en/latest/changelog.html"
+issues = "https://github.com/jazzband/django-payments/issues"
+
+[tool.coverage.report]
+exclude_lines = ["if TYPE_CHECKING:"]
+
+[tool.mypy]
+ignore_missing_imports = true
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "test_settings"
+
+[tool.pytest.ini_options]
+addopts = [
+  "--cov=payments",
+  "--cov-report=term-missing:skip-covered",
+  "--no-cov-on-fail",
+  "--color=yes",
+]
+testpaths = "payments"
+DJANGO_SETTINGS_MODULE = "test_settings"
+pythonpath = "."
+
+[tool.ruff.lint]
+extend-select = [
+  # "A", # Conflicts with some django patterns
+  # "ANN", # TODO
+  "B",
+  # "BLE",
+  "C4",
+  "DJ",
+  "E",
+  "ERA",
+  # "FBT", # TODO
+  "G",
+  "I",
+  "ICN",
+  "INP",
+  "INT",
+  "ISC",
+  # "N", # TODO: fixing these would break public API
+  "PGH",
+  "PIE",
+  "PLE",
+  "PT",
+  "PYI",
+  "Q",
+  "RET",
+  "RSE",
+  "RUF",
+  "SIM",
+  "TCH",
+  "TID",
+  "UP",
+  "W",
+  "YTT",
+]
+ignore = [
+  "RUF012", # FIXME
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+required-imports = ["from __future__ import annotations"]
+
+[tool.setuptools_scm]
+write_to = "payments/version.py"
+version_scheme = "post-release"
+
+[tool.setuptools.packages.find]
+include = ["payments*"]
