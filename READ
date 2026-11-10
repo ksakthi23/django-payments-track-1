@@ -1,0 +1,76 @@
+# Django Payments
+
+## Project Overview
+
+Django Payments is a Python-based payment processing library built for Django applications. It provides a common interface for integrating different payment gateways, making it easier for developers to manage online payments.
+
+This project focuses on improving payment workflows, handling payment statuses, and ensuring reliable payment processing through automated tests.
+
+## Key Features
+
+- Integration with multiple payment providers.
+- Payment creation and processing.
+- Payment status management.
+- Support for payment capture, refunds, and cancellations.
+- Webhook handling.
+- Error handling and validation.
+- Automated unit and integration tests.
+
+## Technologies Used
+
+- Python
+- Django
+- Pytest
+- pytest-cov
+- SQLite
+- Git and GitHub
+
+## Testing and Code Coverage
+
+The project includes an expanded automated test suite covering payment models, fields, forms, URLs, and payment provider workflows.
+
+**Latest local test results:**
+- 401 tests passed
+- 0 failed
+- 0 skipped
+- 100% configured statement and branch coverage
+
+*Coverage excludes type-checking-only code that does not execute at runtime.*
+
+## How to Run the Tests
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ksakthi23/django-payments-track-1.git
+cd django-payments-track-1
+```
+
+Create and activate a virtual environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -e ".[test]"
+```
+
+Run the test suite:
+
+```bash
+python -m pytest --cov=payments --cov-branch --cov-report=term-missing -q -o addopts=''
+```
+
+## Project Objective
+
+The main objective of this project is to improve the reliability and quality of Django payment processing by strengthening automated testing, validating payment workflows, and reducing untested code paths.
+
+## Author
+
+**Sakthi Krishnakumar**
+
+GitHub: https://github.com/ksakthi23
